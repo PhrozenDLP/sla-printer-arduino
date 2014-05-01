@@ -17,9 +17,8 @@
 #define MAX_BUF        (64)
 
 // For Stepper motor
-#define STEPS_PER_MOTOR_REVOLUTION    (32)
-#define STEPS_PER_OUTPUT_REVOLUTION   (32 * 64) // 2048
-#define STEPPER_SPEED                 (700)
+#define STEPS_PER_MOTOR_REVOLUTION    (200)  // 360 / 1.8 = 200
+#define STEPPER_SPEED                 (1000)
 
 // For Servo motor
 #define SERVO_ANGLE_MIN    (0)
@@ -33,22 +32,18 @@ char buffer[MAX_BUF];
 int sofar;
 
 // For Stepper motor
-Stepper stepper(STEPS_PER_MOTOR_REVOLUTION, 8, 10, 9, 11);
+Stepper stepper(STEPS_PER_MOTOR_REVOLUTION, 8, 9, 10, 11);
 int Steps2Take;
 char command;
 
 // For Servo motor
 int angle = SERVO_ANGLE_MIN;
 
-// Misc
-char mode_abs = 1;    // absolute mode
-float px, py;         // location
-float fr = 0;         // speeds
-
 void setup() {
   Serial.begin(SERIAL_BAND);
   while (!Serial) {}
   help();
+  stepper.setSpeed(STEPPER_SPEED);
   ready();
 }
 
@@ -75,15 +70,11 @@ void help() {
   Serial.print(F("SLA Printer ver: "));
   Serial.println(VERSION);
   Serial.println(F("Commands:"));
-  Serial.println(F("G00 [X(steps)] [Y(steps)] [F(feedrate)]; - linear move"));
-  Serial.println(F("G01 [X(steps)] [Y(steps)] [F(feedrate)]; - linear move"));
+  Serial.println(F("G01 [Z(steps)] [F(feedrate)]; - linear move up"));
+  Serial.println(F("G02 [Z(steps)] [F(feedrate)]; - linear move down"));
   Serial.println(F("G04 P[seconds]; - delay"));
-  Serial.println(F("G90; - absolute mode"));
-  Serial.println(F("G91; - relative mode"));
-  Serial.println(F("G92 [X(steps)] [Y(steps)]; - change logical position"));
-  Serial.println(F("M18; - disable motors"));
+  Serial.println(F("G92 [Z(steps)] [Y(steps)]; - change logical position"));
   Serial.println(F("M100; - this help message"));
-  Serial.println(F("M114; - report position and feedrate"));
 }
 
 /**
@@ -108,11 +99,9 @@ void processCommand() {
 //    line( parsenumber('X',(mode_abs?px:0)) + (mode_abs?0:px),
 //          parsenumber('Y',(mode_abs?py:0)) + (mode_abs?0:py) );
 //    break;
-  case  2: // clockwise arc
-  case  3: // counter-clockwise arc
+  case  2:  stepper.step(parsenumber('Z',0));  break;  // Up
+  case  3:  stepper.step(parsenumber('Z',0)*-1);  break;  // Down
   case  4:  pause(parsenumber('P',0)*1000);  break;  // wait a while
-  case 90:  mode_abs=1;  break;  // absolute mode
-  case 91:  mode_abs=0;  break;  // relative mode
   case 92:  // set logical position
 //    position( parsenumber('X',0),
 //              parsenumber('Y',0) );
@@ -123,9 +112,7 @@ void processCommand() {
   // look for commands that start with 'M'
   cmd=parsenumber('M',-1);
   switch(cmd) {
-  case 18:  stepper.release();  break;  // turns off power to steppers (releases the grip)
   case 100:  help();  break;  // print help
-  case 114:  where();  break;  // prints px, py, fr, and mode.
   default:  break;
   }
 
@@ -147,13 +134,6 @@ float parsenumber(char code, float val) {
     ptr=strchr(ptr,' ')+1;
   }
   return val;
-}
-
-void where() {
-  output("X",px);
-  output("Y",py);
-  output("F",fr);
-  Serial.println(mode_abs ? "ABS":"REL");
 }
 
 /**
