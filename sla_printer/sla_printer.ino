@@ -1,30 +1,6 @@
 #include <Stepper.h>
 #include <Servo.h>
-
-/*** Program constants ***/
-#define VERSION        (1)
-
-// Pin definition
-#define STEPS_MOTOR_PIN_1  (8)
-#define STEPS_MOTOR_PIN_2  (10)
-#define STEPS_MOTOR_PIN_3  (9)
-#define STEPS_MOTOR_PIN_4  (11)
-
-#define SERVO_MOTOR_PIN    (12)
-
-// For Serial
-#define SERIAL_BAND    (9600)
-#define MAX_BUF        (128)
-
-// For Stepper motor
-#define STEPS_PER_MOTOR_REVOLUTION    (32)  // 360 / 1.8 = 200
-#define STEPPER_SPEED                 (700)
-
-// For Servo motor
-#define SERVO_ANGLE_MIN    (0)
-#define SERVO_ANGLE_MAX    (180)
-#define SERVO_ANGLE_STEP   (5)
-
+#include "config.h"
 
 /*** Program variables ***/
 // For Serial
@@ -32,7 +8,7 @@ char buffer[MAX_BUF];
 int sofar;
 
 // For Stepper motor
-Stepper stepper(STEPS_PER_MOTOR_REVOLUTION, 8, 9, 10, 11);
+Stepper stepper(STEPS_PER_MOTOR_REVOLUTION, STEPS_MOTOR_PIN_1, STEPS_MOTOR_PIN_3, STEPS_MOTOR_PIN_2, STEPS_MOTOR_PIN_4);
 int Steps2Take;
 char command;
 
