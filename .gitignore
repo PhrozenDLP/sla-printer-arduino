@@ -1,2 +1,5 @@
 # vim swap file
 *.swp
+
+# Mac file
+.DS_Store
