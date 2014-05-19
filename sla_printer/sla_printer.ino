@@ -24,11 +24,13 @@ void setup()
 }
 
 void setupSteppers() {
-  stepperBase.setMaxSpeed(40000);
-  stepperBase.setAcceleration(40000);
-  stepperBase.setSpeed(40000);
+  stepperBase.setMaxSpeed(400000);
+  stepperBase.setAcceleration(400000);
+  stepperBase.setMinPulseWidth(20);
+  stepperBase.setSpeed(400000);
   stepperRotate.setMaxSpeed(MAX_SPEED);
   stepperRotate.setAcceleration(ACC_SPEED);
+  stepperRotate.setMinPulseWidth(20);
   stepperRotate.setSpeed(MAX_SPEED);
 }
 
@@ -88,7 +90,7 @@ void processCommand()
   switch(cmd) {
   case  0:  break;  // move in a line
   case  2:  move_up(parsenumber('Z', 0));  break;  // Up
-  case  3:  move_down(parsenumber('Z', 0) * -1);  break;  // Down
+  case  3:  move_down(parsenumber('Z', 0));  break;  // Down
   case  4:  pause(parsenumber('P', 0) * 1000);  break;  // wait a while
     break;
   default:  break;
@@ -181,7 +183,7 @@ void drive_motor(AccelStepper motor, int steps)
   motor.move(steps);
   while (has_steps(motor))
   {
-    motor.runSpeedToPosition();
+    motor.run();
   }
 }
 
