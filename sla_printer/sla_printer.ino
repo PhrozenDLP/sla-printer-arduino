@@ -8,9 +8,8 @@
 char buffer[MAX_BUF];
 int sofar;
 
-// For Stepper motor
-Stepper stepper(STEPS_PER_MOTOR_REVOLUTION, STEPS_MOTOR_PIN_1, STEPS_MOTOR_PIN_2);
-char command;
+// For Stepper 
+AccelStepper stepperBase(AccelStepper::DRIVER, STEPS_MOTOR_PIN_1, STEPS_MOTOR_PIN_2);
 
 // For Rotation
 AccelStepper stepperRotate(AccelStepper::DRIVER, STEPS_MOTOR_PIN_3, STEPS_MOTOR_PIN_4);
@@ -19,27 +18,22 @@ void setup()
 {
   Serial.begin(SERIAL_BAND);
   while (!Serial) {}
+  setupSteppers();
   help();
-  stepper.setSpeed(STEPPER_SPEED);
+  ready();
+}
+
+void setupSteppers() {
+  stepperBase.setMaxSpeed(40000);
+  stepperBase.setAcceleration(40000);
+  stepperBase.setSpeed(40000);
   stepperRotate.setMaxSpeed(MAX_SPEED);
   stepperRotate.setAcceleration(ACC_SPEED);
-  stepperRotate.setSpeed(1);
-  ready();
+  stepperRotate.setSpeed(MAX_SPEED);
 }
 
 void loop()
 {
-  if (stepperRotate.distanceToGo() != 0)
-  {
-    stepperRotate.run();
-    return;
-  }
-//  if (stepper.distnaceToGo() != 0)
-//  {
-//    stepper.runSpeedToPosition();
-//    return;
-//  }
-
   // listen for commands
   while(Serial.available() > 0)
   {  // if something is available
@@ -93,8 +87,8 @@ void processCommand()
   int arg_value = 0;
   switch(cmd) {
   case  0:  break;  // move in a line
-  case  2:  stepper.step(parsenumber('Z', 0));  break;  // Up
-  case  3:  stepper.step(parsenumber('Z', 0) * -1);  break;  // Down
+  case  2:  move_up(parsenumber('Z', 0));  break;  // Up
+  case  3:  move_down(parsenumber('Z', 0) * -1);  break;  // Down
   case  4:  pause(parsenumber('P', 0) * 1000);  break;  // wait a while
     break;
   default:  break;
@@ -162,17 +156,36 @@ void pause(int wait_millis)
   delay(wait_millis);
 }
 
-void rotateCW(int steps) {
-    rotate(steps);
-}
-
-void rotateCCW(int steps) {
-  rotate(-1 * steps);
-}
-
-void rotate(int steps)
+void move_up(int steps)
 {
-  stepperRotate.move(steps);
-//  stepperRotate.run();
-  stepperRotate.runSpeedToPosition();
+  drive_motor(stepperBase, steps);
+}
+
+void move_down(int steps)
+{
+  drive_motor(stepperBase, -1 * steps);
+}
+
+void rotateCW(int steps)
+{
+  drive_motor(stepperRotate, steps);
+}
+
+void rotateCCW(int steps) 
+{
+  drive_motor(stepperRotate, -1 * steps);
+}
+
+void drive_motor(AccelStepper motor, int steps)
+{
+  motor.move(steps);
+  while (has_steps(motor))
+  {
+    motor.runSpeedToPosition();
+  }
+}
+
+boolean has_steps(AccelStepper motor)
+{
+  return motor.distanceToGo() != 0;
 }
