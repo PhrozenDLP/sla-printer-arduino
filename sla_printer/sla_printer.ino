@@ -1,7 +1,9 @@
-#include <Stepper.h>
 #include <Servo.h>
-#include "config.h"
+#include <Stepper.h>
+#include <SoftwareSerial.h>
+
 #include "AccelStepper.h"
+#include "Config.h"
 
 /*** Program variables ***/
 // For Serial
@@ -13,6 +15,13 @@ AccelStepper stepperBase(AccelStepper::DRIVER, STEPS_MOTOR_PIN_1, STEPS_MOTOR_PI
 
 // For Rotation
 AccelStepper stepperRotate(AccelStepper::DRIVER, STEPS_MOTOR_PIN_3, STEPS_MOTOR_PIN_4);
+
+// Vivitek D517 control command
+SoftwareSerial projector(RS232_RX, RS232_TX);
+const byte on_command[9] =
+        {(byte)0x56, (byte)'9', (byte)'9', (byte)0x53, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x31, (byte)0x0D};
+const byte off_command[9] =
+        {(byte)0x56, (byte)'9', (byte)'9', (byte)0x53, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x32, (byte)0x0D};
 
 void setup()
 {
@@ -92,12 +101,13 @@ void processCommand()
   case  2:  move_up(parsenumber('Z', 0));  break;  // Up
   case  3:  move_down(parsenumber('Z', 0));  break;  // Down
   case  4:  pause(parsenumber('P', 0) * 1000);  break;  // wait a while
-    break;
+  case 50:  projector_on(); delay(50); projector_on(); break; // Turn on projector
+  case 51:  projector_off(); delay(50); projector_off(); break; // Turn off projector
   default:  break;
   }
 
   // look for commands that start with 'M'
-  cmd=parsenumber('M', -1);
+  cmd = parsenumber('M', -1);
   switch(cmd) {
   case  2:
     rotateCW(parsenumber('Z', 0));
@@ -190,4 +200,19 @@ void drive_motor(AccelStepper motor, int steps)
 boolean has_steps(AccelStepper motor)
 {
   return motor.distanceToGo() != 0;
+}
+
+void projector_on()
+{
+  for (int i = 0; i < sizeof(_on_command); i++)
+  {
+    projector.write(_on_command[i]);
+  }
+}
+
+void projector_off()
+{
+  for (int i = 0; i < sizeof(_off_command); i++) {
+    projector.write(_off_command[i]);
+  }
 }
