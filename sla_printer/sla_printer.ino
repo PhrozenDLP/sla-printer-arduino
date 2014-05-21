@@ -18,21 +18,23 @@ AccelStepper stepperRotate(AccelStepper::DRIVER, STEPS_MOTOR_PIN_3, STEPS_MOTOR_
 
 // Vivitek D517 control command
 SoftwareSerial projector(RS232_RX, RS232_TX);
-const byte on_command[9] =
-        {(byte)0x56, (byte)'9', (byte)'9', (byte)0x53, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x31, (byte)0x0D};
-const byte off_command[9] =
-        {(byte)0x56, (byte)'9', (byte)'9', (byte)0x53, (byte)0x30, (byte)0x30, (byte)0x30, (byte)0x32, (byte)0x0D};
+const char on_command[9] =
+        {'V', '9', '9', 'S', '0', '0', '0', '1', '\r'};
+const char off_command[9] =
+        {'V', '9', '9', 'S', '0', '0', '0', '2', '\r'};
 
 void setup()
 {
   Serial.begin(SERIAL_BAND);
   while (!Serial) {}
   setupSteppers();
+  setupProjector();
   help();
   ready();
 }
 
-void setupSteppers() {
+void setupSteppers()
+{
   stepperBase.setMaxSpeed(400000);
   stepperBase.setAcceleration(400000);
   stepperBase.setMinPulseWidth(20);
@@ -41,6 +43,11 @@ void setupSteppers() {
   stepperRotate.setAcceleration(ACC_SPEED);
   stepperRotate.setMinPulseWidth(20);
   stepperRotate.setSpeed(MAX_SPEED);
+}
+
+void setupProjector()
+{
+  projector.begin(PROJECTOR_BAUD);
 }
 
 void loop()
@@ -73,6 +80,8 @@ void help()
   Serial.println(F("G02 [Z(steps)]; - linear move up"));
   Serial.println(F("G03 [Z(steps)]; - linear move down"));
   Serial.println(F("G04 P[seconds]; - delay"));
+  Serial.println(F("G50; - Send power on command"));
+  Serial.println(F("G51; - Send power off command"));
   Serial.println(F("M02 [Z(steps)]; - rotate servo"));
   Serial.println(F("M03 [Z(steps)]; - rotate servo"));
   Serial.println(F("M100; - this help message"));
@@ -101,8 +110,8 @@ void processCommand()
   case  2:  move_up(parsenumber('Z', 0));  break;  // Up
   case  3:  move_down(parsenumber('Z', 0));  break;  // Down
   case  4:  pause(parsenumber('P', 0) * 1000);  break;  // wait a while
-  case 50:  projector_on(); delay(50); projector_on(); break; // Turn on projector
-  case 51:  projector_off(); delay(50); projector_off(); break; // Turn off projector
+  case 50:  projector_on(); break; // Turn on projector
+  case 51:  projector_off(); break; // Turn off projector
   default:  break;
   }
 
@@ -114,12 +123,6 @@ void processCommand()
     break;
   case  3:
     rotateCCW(parsenumber('Z', 0));
-    break;
-  case 10:
-    Serial.print("pos: ");
-    Serial.println(stepperRotate.currentPosition());
-    Serial.print("target: ");
-    Serial.println(stepperRotate.targetPosition());
     break;
   case 100:  help();  break;  // print help
   default:  break;
@@ -204,15 +207,15 @@ boolean has_steps(AccelStepper motor)
 
 void projector_on()
 {
-  for (int i = 0; i < sizeof(_on_command); i++)
+  for (int i = 0; i < sizeof(on_command); i++)
   {
-    projector.write(_on_command[i]);
+    projector.write((byte)on_command[i]);
   }
 }
 
 void projector_off()
 {
-  for (int i = 0; i < sizeof(_off_command); i++) {
-    projector.write(_off_command[i]);
+  for (int i = 0; i < sizeof(off_command); i++) {
+    projector.write((byte)off_command[i]);
   }
 }

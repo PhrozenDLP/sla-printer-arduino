@@ -10,8 +10,10 @@
 #define MAX_SPEED (200)
 #define ACC_SPEED (200)
 
-#define RS232_TX  (6)  // RX of RS232 board
-#define RS232_RX  (7)  // TX of RS232 board
+// Projector
+#define RS232_TX  (7)  // TX of RS232 board (my board)
+#define RS232_RX  (6)  // RX of RS232 board (my board)
+#define PROJECTOR_BAUD (9600)
 
 // For Serial
 #define SERIAL_BAND    (9600)
