@@ -1,7 +1,8 @@
 #include <Servo.h>
 #include <Stepper.h>
-#include <SoftwareSerial.h>
 
+#include "mySoftwareSerial.h"
+#include "PinChangeInt.h"
 #include "AccelStepper.h"
 #include "Config.h"
 
@@ -10,11 +11,11 @@
 char buffer[MAX_BUF];
 int sofar;
 
+volatile bool hitUpperLimit = false;
+volatile bool hitLowerLimit = false;
+
 // For Stepper 
 AccelStepper stepperBase(AccelStepper::DRIVER, STEPS_MOTOR_PIN_1, STEPS_MOTOR_PIN_2);
-
-// For Rotation
-AccelStepper stepperRotate(AccelStepper::DRIVER, STEPS_MOTOR_PIN_3, STEPS_MOTOR_PIN_4);
 
 // Vivitek D517 control command
 SoftwareSerial projector(RS232_RX, RS232_TX);
@@ -29,6 +30,7 @@ void setup()
   while (!Serial) {}
   setupSteppers();
   setupProjector();
+  setupLimits();
   help();
   ready();
 }
@@ -39,15 +41,24 @@ void setupSteppers()
   stepperBase.setAcceleration(400000);
   stepperBase.setMinPulseWidth(20);
   stepperBase.setSpeed(400000);
-  stepperRotate.setMaxSpeed(MAX_SPEED);
-  stepperRotate.setAcceleration(ACC_SPEED);
-  stepperRotate.setMinPulseWidth(20);
-  stepperRotate.setSpeed(MAX_SPEED);
 }
 
 void setupProjector()
 {
   projector.begin(PROJECTOR_BAUD);
+}
+
+void setupLimits()
+{
+  // setup upper limit
+  pinMode(UPPER_LIMIT_PIN, INPUT);
+  digitalWrite(UPPER_LIMIT_PIN, HIGH);
+  PCintPort::attachInterrupt(UPPER_LIMIT_PIN, onHitUpperLimit, RISING);
+
+  // Setup lower limit
+  pinMode(LOWER_LIMIT_PIN, INPUT);
+  digitalWrite(LOWER_LIMIT_PIN, HIGH);
+  PCintPort::attachInterrupt(LOWER_LIMIT_PIN, onHitLowerLimit, RISING);
 }
 
 void loop()
@@ -82,8 +93,6 @@ void help()
   Serial.println(F("G04 P[seconds]; - delay"));
   Serial.println(F("G50; - Send power on command"));
   Serial.println(F("G51; - Send power off command"));
-  Serial.println(F("M02 [Z(steps)]; - rotate servo"));
-  Serial.println(F("M03 [Z(steps)]; - rotate servo"));
   Serial.println(F("M100; - this help message"));
 }
 
@@ -103,7 +112,7 @@ void ready()
 void processCommand()
 {
   // look for commands that start with 'G'
-  int cmd = parsenumber('G',-1);
+  int cmd = parsenumber('G', -1);
   int arg_value = 0;
   switch(cmd) {
   case  0:  break;  // move in a line
@@ -118,12 +127,6 @@ void processCommand()
   // look for commands that start with 'M'
   cmd = parsenumber('M', -1);
   switch(cmd) {
-  case  2:
-    rotateCW(parsenumber('Z', 0));
-    break;
-  case  3:
-    rotateCCW(parsenumber('Z', 0));
-    break;
   case 100:  help();  break;  // print help
   default:  break;
   }
@@ -173,22 +176,34 @@ void pause(int wait_millis)
 
 void move_up(int steps)
 {
-  drive_motor(stepperBase, steps);
+  hitLowerLimit = false;
+  if (hitUpperLimit)
+  {
+    return;
+  }
+  for (int i = 0; i < steps; i++)
+  {
+    if (hitUpperLimit) {
+      break;
+    }
+    drive_motor(stepperBase, 1);
+  }
 }
 
 void move_down(int steps)
 {
-  drive_motor(stepperBase, -1 * steps);
-}
-
-void rotateCW(int steps)
-{
-  drive_motor(stepperRotate, steps);
-}
-
-void rotateCCW(int steps) 
-{
-  drive_motor(stepperRotate, -1 * steps);
+  hitUpperLimit = false;
+  if (hitLowerLimit)
+  {
+    return;
+  }
+  for (int i = 0; i < steps; i++)
+  {
+    if (hitLowerLimit) {
+      break;
+    }
+    drive_motor(stepperBase, -1);
+  }
 }
 
 void drive_motor(AccelStepper motor, int steps)
@@ -218,4 +233,14 @@ void projector_off()
   for (int i = 0; i < sizeof(off_command); i++) {
     projector.write((byte)off_command[i]);
   }
+}
+
+void onHitUpperLimit()
+{
+  hitUpperLimit = true;
+}
+
+void onHitLowerLimit()
+{
+  hitLowerLimit = true;
 }

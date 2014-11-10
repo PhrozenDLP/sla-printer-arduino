@@ -4,6 +4,8 @@
 // Pin definition
 #define STEPS_MOTOR_PIN_1  (8)
 #define STEPS_MOTOR_PIN_2  (9)
+#define UPPER_LIMIT_PIN    (15)
+#define LOWER_LIMIT_PIN    (16)
 
 #define STEPS_MOTOR_PIN_3  (10)
 #define STEPS_MOTOR_PIN_4  (11)
