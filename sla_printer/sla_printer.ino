@@ -88,12 +88,14 @@ void help()
   Serial.print(F("SLA Printer ver: "));
   Serial.println(VERSION);
   Serial.println(F("Commands:"));
-  Serial.println(F("G02 [Z(steps)]; - linear move up"));
-  Serial.println(F("G03 [Z(steps)]; - linear move down"));
-  Serial.println(F("G04 P[seconds]; - delay"));
-  Serial.println(F("G50; - Send power on command"));
-  Serial.println(F("G51; - Send power off command"));
-  Serial.println(F("M100; - this help message"));
+  Serial.println(F("G02 Z(steps);   - linear move up"));
+  Serial.println(F("G03 Z(steps);   - linear move down"));
+  Serial.println(F("G04 P(seconds); - delay"));
+  Serial.println(F("G50;            - Send power on command"));
+  Serial.println(F("G51;            - Send power off command"));
+  Serial.println(F("M99;            - version info"));
+  Serial.println(F("M100;           - this help message"));
+  Serial.println(F("M02 R(rpm);     - set motor speed (rpm)"));
 }
 
 /**
@@ -127,6 +129,8 @@ void processCommand()
   // look for commands that start with 'M'
   cmd = parsenumber('M', -1);
   switch(cmd) {
+  case   2:  set_stepper_speed(parsenumber('R', 0));  break;
+  case  99:  Serial.println(F(VERSION));  break;
   case 100:  help();  break;  // print help
   default:  break;
   }
@@ -243,4 +247,9 @@ void onHitUpperLimit()
 void onHitLowerLimit()
 {
   hitLowerLimit = true;
+}
+
+void set_stepper_speed(int rpm)
+{
+  stepperBase.setSpeed(rpm);
 }

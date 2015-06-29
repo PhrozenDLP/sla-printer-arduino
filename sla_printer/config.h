@@ -1,5 +1,5 @@
 /*** Program constants ***/
-#define VERSION        (1)
+#define VERSION        "0.2.0"
 
 // Pin definition
 #define STEPS_MOTOR_PIN_1  (8)
