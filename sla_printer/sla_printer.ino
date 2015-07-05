@@ -37,10 +37,10 @@ void setup()
 
 void setupSteppers()
 {
-  stepperBase.setMaxSpeed(400000);
-  stepperBase.setAcceleration(400000);
+  stepperBase.setMaxSpeed(MAX_MOTOR_RPM);
+  stepperBase.setAcceleration(MAX_MOTOR_RPM);
   stepperBase.setMinPulseWidth(20);
-  stepperBase.setSpeed(400000);
+  stepperBase.setSpeed(160);
 }
 
 void setupProjector()
@@ -129,7 +129,13 @@ void processCommand()
   // look for commands that start with 'M'
   cmd = parsenumber('M', -1);
   switch(cmd) {
-  case   2:  set_stepper_speed(parsenumber('R', 0));  break;
+  case   2:
+    arg_value = parsenumber('R', 0);
+    if (arg_value > MAX_MOTOR_RPM) {
+      arg_value = MAX_MOTOR_RPM;
+    }
+    set_stepper_speed(arg_value);
+    break;
   case  99:  Serial.println(F(VERSION));  break;
   case 100:  help();  break;  // print help
   default:  break;
