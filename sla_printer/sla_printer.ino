@@ -93,9 +93,9 @@ void help()
   Serial.println(F("G04 P(seconds); - delay"));
   Serial.println(F("G50;            - Send power on command"));
   Serial.println(F("G51;            - Send power off command"));
+  Serial.println(F("M02 R(rpm);     - set motor speed (rpm)"));
   Serial.println(F("M99;            - version info"));
   Serial.println(F("M100;           - this help message"));
-  Serial.println(F("M02 R(rpm);     - set motor speed (rpm)"));
 }
 
 /**
