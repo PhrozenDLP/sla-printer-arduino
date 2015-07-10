@@ -150,14 +150,14 @@ void processCommand()
  * @input code the character to look for.
  * @input val the return value if /code/ is not found.
  **/
-float parsenumber(char code, float val)
+int parsenumber(char code, int val)
 {
   char *ptr=buffer;
   while(ptr && *ptr && ptr<buffer+sofar)
   {
     if(*ptr==code)
     {
-      return atof(ptr+1);
+      return atoi(ptr+1);
     }
     ptr=strchr(ptr,' ')+1;
   }

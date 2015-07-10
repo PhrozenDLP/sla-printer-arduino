@@ -1,5 +1,5 @@
 /*** Program constants ***/
-#define VERSION        "0.2.1"
+#define VERSION        "0.2.2"
 
 // Pin definition
 #define STEPS_MOTOR_PIN_1  (8)
@@ -24,5 +24,5 @@
 // For Stepper motor
 #define STEPS_PER_MOTOR_REVOLUTION    (200)  // 360 / 1.8 = 200
 #define STEPPER_SPEED                 (160)
-#define MAX_MOTOR_RPM                 (960)
+#define MAX_MOTOR_RPM                 (32000)
 
