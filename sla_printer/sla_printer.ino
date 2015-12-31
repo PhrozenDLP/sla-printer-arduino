@@ -120,7 +120,7 @@ void processCommand()
   case  0:  break;  // move in a line
   case  2:  move_up(parsenumber('Z', 0));  break;  // Up
   case  3:  move_down(parsenumber('Z', 0));  break;  // Down
-  case  4:  pause(parsenumber('P', 0) * 1000);  break;  // wait a while
+  case  4:  pause(parsenumber('P', 0));  break;  // wait a while
   case 50:  projector_on(); break; // Turn on projector
   case 51:  projector_off(); break; // Turn off projector
   default:  break;
